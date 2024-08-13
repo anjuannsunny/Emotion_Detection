@@ -11,7 +11,7 @@ emotion_labels = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutr
 
 @app.route('/predict', methods=['POST'])
 def predict_emotion():
-    
+    #process the uploaded or captured image
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided'}), 400
     
