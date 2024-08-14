@@ -7,42 +7,119 @@
     <title>Emotion Detection</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-image: url('../static/uploads/bg1.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            color: white;
+            height: 100vh;
+        }
+
+        .container {
+            padding: 30px;
+            border-radius: 10px;
+            margin-top: 50px;
+        }
+
+        .btn-primary {
+            background-color: #175da8; /* Primary blue color */
+            border: none;
+            color: #ffffff; /* White text for contrast */
+            padding: 10px 20px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            margin-right: 10px; /* Space between buttons */
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
+            transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition for hover effects */
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+            transform: scale(1.05); /* Slight scale-up on hover */
+        }
+
+        .btn-primary:focus {
+            outline: none;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.6); /* Glowing outline on focus */
+        }
+
+        .btn-primary:active {
+            background-color: #003d80; /* Even darker blue on active/click */
+            transform: scale(0.98); /* Slight scale-down on click */
+        }
+
+        #result {
+            color: white; /* Ensure result text is white */
+        }
+
+        #emotionDisplay {
+            color: #ffcc00; /* Optionally, you can use a different color for emphasis */
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
         <h1 class="text-right" style="padding-bottom: 20px;">Emotion Detection System</h1>
-        <!-- Carousel -->
-        <div >
-            
-        </div>
         <p class="text-right">Detect emotions in real-time using our advanced face detection technology.</p>
-        <!-- Predict Disease Button -->
+        <!-- Buttons for Uploading Image and Camera Capture -->
         <div class="container text-right mt-5">
             <button id="uploadImage" class="btn btn-primary">Upload Image</button>
-            <button id="startCamera" class="btn btn-primary">Use Camera</button>
+            <button id="startCamera" class="btn btn-primary">Start Camera</button>
+            <button id="captureImage" class="btn btn-primary">Capture Image</button>
         </div>
-        <!-- Paragraph about Skin Cancer -->
+        <!-- Video Stream -->
         <div class="container text-center mt-5">
             <video id="cameraStream" autoplay></video>
         </div>
-        
         <!-- Hidden File Input -->
         <input type="file" id="fileInput" style="display: none;" />
+        <!-- Prediction Result Display -->
+        <div id="result" class="container mt-5 text-center">
+            <h2>Predicted Emotion: <span id="emotionDisplay">None</span></h2>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
+        let videoStream = null;
+
         document.getElementById('uploadImage').addEventListener('click', function() {
             document.getElementById('fileInput').click();
         });
 
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                fetch('/', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('emotionDisplay').textContent = data.emotion;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+
         document.getElementById('startCamera').addEventListener('click', function() {
             const video = document.getElementById('cameraStream');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
                     video.srcObject = stream;
+                    videoStream = stream; // Save the stream for later use
                 }).catch(function(err) {
                     console.error("Error accessing camera: ", err);
                 });
@@ -50,83 +127,36 @@
                 alert("Camera not supported.");
             }
         });
+
+        document.getElementById('captureImage').addEventListener('click', function() {
+            const video = document.getElementById('cameraStream');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            if (videoStream) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0);
+                canvas.toBlob(function(blob) {
+                    const formData = new FormData();
+                    formData.append('image', blob, 'image.png');
+
+                    fetch('/', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('emotionDisplay').textContent = data.emotion;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }, 'image/png');
+            } else {
+                alert("Please start the camera first.");
+            }
+        });
     </script>
 </body>
-<script>
-    
-</script>
-<style>
-    body {
-    background-image: url('../static/uploads/bg1.jpg');
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center;
-    color: white;
-    height: 100vh;
-}
-
-.container {
-    /* background-color: rgba(0, 0, 0, 0.6); */
-    padding: 30px;
-    border-radius: 10px;
-    margin-top: 50px;
-}
-
-.row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.left-section {
-    width: 48%;
-}
-
-.right-section {
-    width: 48%;
-    text-align: right;
-}
-
-.right-section p {
-    font-size: 1.2em;
-    margin-bottom: 20px;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    border: none;
-}
-
-.btn-primary:hover {
-    background-color: #0056b3;
-}
-.btn-primary {
-    background-color: #175da8; /* Primary blue color */
-    border: none;
-    color: #ffffff; /* White text for contrast */
-    padding: 10px 20px;
-    font-size: 1.1em;
-    border-radius: 5px;
-    margin-right: 10px; /* Space between buttons */
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
-    transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition for hover effects */
-    padding-right: 10%;
-}
-
-.btn-primary:hover {
-    background-color: #0056b3; /* Darker blue on hover */
-    transform: scale(1.05); /* Slight scale-up on hover */
-}
-
-.btn-primary:focus {
-    outline: none;
-    box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.6); /* Glowing outline on focus */
-}
-
-.btn-primary:active {
-    background-color: #003d80; /* Even darker blue on active/click */
-    transform: scale(0.98); /* Slight scale-down on click */
-}
-
-</style>
 </html>
