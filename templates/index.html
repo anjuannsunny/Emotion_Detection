@@ -7,57 +7,7 @@
     <title>Emotion Detection</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body {
-            background-image: url('../static/uploads/bg1.jpg');
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-            color: white;
-            height: 100vh;
-        }
 
-        .container {
-            padding: 30px;
-            border-radius: 10px;
-            margin-top: 50px;
-        }
-
-        .btn-primary {
-            background-color: #175da8; /* Primary blue color */
-            border: none;
-            color: #ffffff; /* White text for contrast */
-            padding: 10px 20px;
-            font-size: 1.1em;
-            border-radius: 5px;
-            margin-right: 10px; /* Space between buttons */
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
-            transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition for hover effects */
-        }
-
-        .btn-primary:hover {
-            background-color: #0056b3; /* Darker blue on hover */
-            transform: scale(1.05); /* Slight scale-up on hover */
-        }
-
-        .btn-primary:focus {
-            outline: none;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.6); /* Glowing outline on focus */
-        }
-
-        .btn-primary:active {
-            background-color: #003d80; /* Even darker blue on active/click */
-            transform: scale(0.98); /* Slight scale-down on click */
-        }
-
-        #result {
-            color: white; /* Ensure result text is white */
-        }
-
-        #emotionDisplay {
-            color: #ffcc00; /* Optionally, you can use a different color for emphasis */
-        }
-    </style>
 </head>
 <body>
     <div class="container mt-5">
@@ -68,6 +18,12 @@
             <button id="uploadImage" class="btn btn-primary">Upload Image</button>
             <button id="startCamera" class="btn btn-primary">Start Camera</button>
             <button id="captureImage" class="btn btn-primary">Capture Image</button>
+            
+        </div>
+         <!-- Image Display -->
+         <div class="text-center mt-5" style="display: flex;float: inline-end;">
+            <img id="uploadedImage" src="" alt="Uploaded Image" style="max-width: 300px; max-height: 300px; width: auto; height: auto; display: none; padding-left: 10px;">
+            <h2 style="float: right; color: white; padding-left: 10px;display: none;" id="prediction_text">Predicted Emotion: <span id="emotionDisplay">None</span></h2>
         </div>
         <!-- Video Stream -->
         <div class="container text-center mt-5">
@@ -76,9 +32,9 @@
         <!-- Hidden File Input -->
         <input type="file" id="fileInput" style="display: none;" />
         <!-- Prediction Result Display -->
-        <div id="result" class="container mt-5 text-center">
+        <!-- <div id="result" class="container mt-5 text-center">
             <h2>Predicted Emotion: <span id="emotionDisplay">None</span></h2>
-        </div>
+        </div> -->
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
@@ -88,12 +44,24 @@
         let videoStream = null;
 
         document.getElementById('uploadImage').addEventListener('click', function() {
+            // Clear previous results
+            
             document.getElementById('fileInput').click();
         });
 
         document.getElementById('fileInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgElement = document.getElementById('uploadedImage');
+                    imgElement.src = e.target.result;
+                    imgElement.style.display = 'block';
+                    const textElement = document.getElementById('prediction_text');
+                    textElement.style.display ='block';
+                };
+                reader.readAsDataURL(file);
+
                 const formData = new FormData();
                 formData.append('image', file);
 
