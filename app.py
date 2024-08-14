@@ -5,11 +5,8 @@ from tensorflow.keras.models import load_model  # type: ignore
 
 app = Flask(__name__)
 model = load_model('emotion_cnn_model.h5')
-<<<<<<< HEAD
 #model = load_model('emotion_model.keras')  #whichever is used take that line
-=======
 # model = load_model('emotion_model.keras')  # whichever is used take that line
->>>>>>> d9ef1d7999f25dbd8fa32995a5b6da3787c9ca47
 
 emotion_labels = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
 
