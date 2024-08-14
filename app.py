@@ -1,17 +1,25 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import numpy as np
 import cv2
-from tensorflow.keras.models import load_model # type: ignore
+from tensorflow.keras.models import load_model  # type: ignore
 
 app = Flask(__name__)
 model = load_model('emotion_cnn_model.h5')
+<<<<<<< HEAD
 #model = load_model('emotion_model.keras')  #whichever is used take that line
+=======
+# model = load_model('emotion_model.keras')  # whichever is used take that line
+>>>>>>> d9ef1d7999f25dbd8fa32995a5b6da3787c9ca47
 
 emotion_labels = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
 
-@app.route('/predict', methods=['POST'])
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/', methods=['POST'])
 def predict_emotion():
-    #process the uploaded or captured image
+    # Process the uploaded or captured image
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided'}), 400
     
@@ -19,7 +27,7 @@ def predict_emotion():
     
     # Read the image file
     img = file.read()
-    img_array = np.fromstring(img, np.uint8)
+    img_array = np.frombuffer(img, np.uint8)
     img = cv2.imdecode(img_array, cv2.IMREAD_GRAYSCALE)
     
     if img is None:

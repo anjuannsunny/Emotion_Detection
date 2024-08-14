@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="../static/uploads/cell.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-right" style="padding-bottom: 20px;">Emotion Detection System</h1>
+        <p class="text-right">Detect emotions in real-time using our advanced face detection technology.</p>
+        <!-- Buttons for Uploading Image and Camera Capture -->
+        <div class="container text-right mt-5">
+            <button id="uploadImage" class="btn btn-primary">Upload Image</button>
+            <button id="startCamera" class="btn btn-primary">Start Camera</button>
+        </div>
+        <!-- Bootstrap Modal for Camera -->
+        <div class="modal fade" id="cameraModal" tabindex="-1" role="dialog" aria-labelledby="cameraModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content modal-black">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cameraModalLabel">Capture Image</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <video id="cameraStream" autoplay style="width: 100%;"></video>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button id="captureImage" type="button" class="btn btn-primary">Capture Image</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal for Uploaded Image Preview and Prediction -->
+        <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content modal-black">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imagePreviewModalLabel">Image Preview & Prediction</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="uploadedImage" src="" alt="Uploaded Image" style="max-width: 100%; max-height: 400px;"/>
+                        <h3 class="mt-3" style="color: black;">Predicted Emotion: <span id="modalEmotionDisplay">None</span></h3>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal for Captured Image Preview and Prediction -->
+        <div class="modal fade" id="capturedImagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="capturedImagePreviewModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content modal-black">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="capturedImagePreviewModalLabel">Captured Image Preview & Prediction</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="capturedImage" src="" alt="Captured Image" style="max-width: 100%; max-height: 400px;"/>
+                        <h3 class="mt-3" style="color: black;">Predicted Emotion: <span id="capturedModalEmotionDisplay">None</span></h3>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Hidden File Input -->
+        <input type="file" id="fileInput" style="display: none;" />
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        let videoStream = null;
+
+        document.getElementById('uploadImage').addEventListener('click', function() {
+            // Clear previous results
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Clear previous results
+                document.getElementById('modalEmotionDisplay').textContent = 'None';
+                document.getElementById('uploadedImage').src = '';
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Show the image in the modal
+                    document.getElementById('uploadedImage').src = e.target.result;
+
+                    // Open the modal
+                    $('#imagePreviewModal').modal('show');
+                };
+                reader.readAsDataURL(file);
+
+                const formData = new FormData();
+                formData.append('image', file);
+
+                fetch('/', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Show the predicted emotion in the modal
+                    document.getElementById('modalEmotionDisplay').textContent = data.emotion;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+
+        document.getElementById('startCamera').addEventListener('click', function() {
+            $('#cameraModal').modal('show');
+            const video = document.getElementById('cameraStream');
+
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                    video.srcObject = stream;
+                    videoStream = stream; // Save the stream for later use
+                }).catch(function(err) {
+                    console.error("Error accessing camera: ", err);
+                });
+            } else {
+                alert("Camera not supported.");
+            }
+        });
+
+        document.getElementById('captureImage').addEventListener('click', function() {
+            const video = document.getElementById('cameraStream');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            if (videoStream) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0);
+                canvas.toBlob(function(blob) {
+                    const formData = new FormData();
+                    formData.append('image', blob, 'image.png');
+
+                    fetch('/', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Show the captured image in the modal
+                        document.getElementById('capturedImage').src = URL.createObjectURL(blob);
+
+                        // Show the predicted emotion in the modal
+                        document.getElementById('capturedModalEmotionDisplay').textContent = data.emotion;
+
+                        // Stop the video stream
+                        videoStream.getTracks().forEach(track => track.stop());
+
+                        // Close the camera modal
+                        $('#cameraModal').modal('hide');
+
+                        // Open the captured image preview modal
+                        $('#capturedImagePreviewModal').modal('show');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }, 'image/png');
+            } else {
+                alert("Please start the camera first.");
+            }
+        });
+    </script>
+</body>
+</html>
