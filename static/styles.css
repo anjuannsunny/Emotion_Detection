@@ -56,3 +56,15 @@ body {
 }
 
 
+.modal-black {
+    background-color: black;
+    color: white;
+}
+.modal-black .modal-header,
+.modal-black .modal-footer {
+    border-color: #444;
+    background: black;
+}
+.modal-black .close {
+    color: white;
+}
