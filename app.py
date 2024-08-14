@@ -4,7 +4,7 @@ import cv2
 from tensorflow.keras.models import load_model # type: ignore
 
 app = Flask(__name__)
-model = load_model('emotion_model.h5')
+model = load_model('emotion_cnn_model.h5')
 #model = load_model('emotion_model.keras')  #whichever is used take that line
 
 emotion_labels = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
