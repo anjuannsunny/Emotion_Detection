@@ -78,7 +78,7 @@ Feel free to contribute to this project by opening issues or submitting pull req
 4. **Commit your changes:**
 
     ```bash
-    git commit -am 'Add new feature'
+    git commit -m 'Add new feature'
     ```
 
 5. **Push to the branch:**
